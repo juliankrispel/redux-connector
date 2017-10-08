@@ -1,31 +1,22 @@
-import React from 'react';
+import { createElement, PureComponent } from 'react';
 import { connect } from 'react-redux';
-import PropTypes from 'prop-types';
 
-const Connect = ({
-  mapStateToProps,
-  mapDispatchToProps,
-  mergeProps,
-  options,
-  children,
-}) => {
+class Connect extends PureComponent {
+  render() {
+    const {
+      mapStateToProps,
+      mapDispatchToProps,
+      mergeProps,
+      options,
+      children
+    } = this.props;
 
-  const Comp = connect(
-    mapStateToProps,
-    mapDispatchToProps,
-    mergeProps,
-    options
-  )((props) => children(props));
-
-  return <Comp />;
+    return createElement(
+      connect(mapStateToProps, mapDispatchToProps, mergeProps, options)(props =>
+        children(props)
+      )
+    );
+  }
 }
-
-Connect.propTypes = {
-  mapStateToProps: PropTypes.func,
-  mapDispatchToProps: PropTypes.func,
-  mergeProps: PropTypes.func,
-  options: PropTypes.object,
-  children: PropTypes.func.isRequired,
-};
 
 export default Connect;

@@ -2,7 +2,7 @@
 
 [Install from npm](https://www.npmjs.com/package/redux-connector) - `yarn add redux-connector` or `npm install redux --save`
 
-A component alternative for the `connect` HOC from react-redux, using the [Function as a child](https://medium.com/merrickchristensen/function-as-child-components-5f3920a9ace9) pattern.  
+A component alternative for the `connect` HOC from react-redux, using the [Function as a child](https://medium.com/merrickchristensen/function-as-child-components-5f3920a9ace9) or [render prop](https://cdb.reacttraining.com/use-a-render-prop-50de598f11ce) pattern.  
 ```jsx
 <Connect
   mapStateToProps={mapStateToProps}
