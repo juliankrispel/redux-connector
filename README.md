@@ -1,7 +1,6 @@
-# Redux Connector
+# Redux Connector ([npm](https://www.npmjs.com/package/redux-connector))
 
-A component alternative for the `connect` HOC from react-redux, using the [Function as a child](https://medium.com/merrickchristensen/function-as-child-components-5f3920a9ace9) pattern.
-
+A component alternative for the `connect` HOC from react-redux, using the [Function as a child](https://medium.com/merrickchristensen/function-as-child-components-5f3920a9ace9) pattern.  
 ```jsx
 <Connect
   mapStateToProps={mapStateToProps}
