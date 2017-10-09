@@ -1,3 +1,6 @@
+__DISCLAIMER__: This component is a __proof of concept__. Use it with care. It'll work but has one performance downside:
+- If any of the props of this Connector component update, it'll rerender its entire subtree.
+
 # Redux Connector
 
 [Install from npm](https://www.npmjs.com/package/redux-connector) - `yarn add redux-connector` or `npm install redux --save`
