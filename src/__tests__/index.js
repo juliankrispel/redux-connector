@@ -93,23 +93,24 @@ describe('React', () => {
       expect(container.context.store).toBe(store);
     });
 
-    it.only('should pass state and props to the given component', () => {
+    it('should pass state and props to the given component', () => {
       const store = createStore(() => ({
         foo: 'bar',
         baz: 42,
         hello: 'world'
       }));
 
-      @connect(({ foo, baz }) => ({ foo, baz }))
       class Container extends Component {
         render() {
           return <Passthrough {...this.props} />;
         }
       }
 
+      const Enhanced = connect(({ foo, baz }) => ({ foo, baz }))(Container);
+
       const container = TestUtils.renderIntoDocument(
         <ProviderMock store={store}>
-          <Container pass="through" baz={50} />
+          <Enhanced pass="through" baz={49} />
         </ProviderMock>
       );
       const stub = TestUtils.findRenderedComponentWithType(
@@ -122,7 +123,7 @@ describe('React', () => {
       expect(stub.props.hello).toEqual(undefined);
       expect(() =>
         TestUtils.findRenderedComponentWithType(container, Container)
-      ).toNotThrow();
+      ).not.toThrow();
     });
 
     it('should subscribe class components to the store changes', () => {
@@ -158,13 +159,12 @@ describe('React', () => {
         return <Passthrough {...props} />;
       });
 
-      const spy = expect.spyOn(console, 'error');
+      const spy = jest.spyOn(console, 'error').mock;
       const tree = TestUtils.renderIntoDocument(
         <ProviderMock store={store}>
           <Container />
         </ProviderMock>
       );
-      spy.destroy();
       expect(spy.calls.length).toBe(0);
 
       const stub = TestUtils.findRenderedComponentWithType(tree, Passthrough);
@@ -184,13 +184,12 @@ describe('React', () => {
         return <Passthrough {...props} />;
       });
 
-      const spy = expect.spyOn(console, 'error');
+      const spy = jest.spyOn(console, 'error').mock;
       const tree = TestUtils.renderIntoDocument(
         <ProviderMock store={store}>
           <Container />
         </ProviderMock>
       );
-      spy.destroy();
       expect(spy.calls.length).toBe(0);
 
       const stub = TestUtils.findRenderedComponentWithType(tree, Passthrough);
@@ -864,7 +863,7 @@ describe('React', () => {
       const subscribe = store.subscribe;
 
       // Keep track of unsubscribe by wrapping subscribe()
-      const spy = expect.createSpy(() => ({}));
+      const spy = jest.fn(() => ({}));
       store.subscribe = listener => {
         const unsubscribe = subscribe(listener);
         return () => {
@@ -888,9 +887,9 @@ describe('React', () => {
         div
       );
 
-      expect(spy.calls.length).toBe(0);
+			expect(spy.mock.calls.length).toBe(0);
       ReactDOM.unmountComponentAtNode(div);
-      expect(spy.calls.length).toBe(1);
+      expect(spy.mock.calls.length).toBe(1);
     });
 
     it('should not attempt to set state after unmounting', () => {
@@ -917,9 +916,8 @@ describe('React', () => {
       );
 
       expect(mapStateToPropsCalls).toBe(1);
-      const spy = expect.spyOn(console, 'error');
+      const spy = jest.spyOn(console, 'error').mock;
       store.dispatch({ type: 'APPEND', body: 'a' });
-      spy.destroy();
       expect(spy.calls.length).toBe(0);
       expect(mapStateToPropsCalls).toBe(1);
     });
@@ -1053,13 +1051,12 @@ describe('React', () => {
         div
       );
 
-      const spy = expect.spyOn(console, 'error');
+      const spy = jest.spyOn(console, 'error').mock;
 
       linkA.click();
       linkB.click();
       linkB.click();
 
-      spy.destroy();
       document.body.removeChild(div);
       expect(mapStateToPropsCalls).toBe(3);
       expect(spy.calls.length).toBe(0);
@@ -1093,16 +1090,15 @@ describe('React', () => {
       );
       expect(mapStateToPropsCalls).toBe(1);
 
-      const spy = expect.spyOn(console, 'error');
+      const spy = jest.spyOn(console, 'error').mock;
       ReactDOM.unmountComponentAtNode(div);
-      spy.destroy();
       expect(spy.calls.length).toBe(0);
       expect(mapStateToPropsCalls).toBe(1);
     });
 
     it('should shallowly compare the selected state to prevent unnecessary updates', () => {
       const store = createStore(stringBuilder);
-      const spy = expect.createSpy(() => ({}));
+      const spy = jest.fn();
       function render({ string }) {
         spy();
         return <Passthrough string={string} />;
@@ -1122,19 +1118,19 @@ describe('React', () => {
       );
 
       const stub = TestUtils.findRenderedComponentWithType(tree, Passthrough);
-      expect(spy.calls.length).toBe(1);
+      expect(spy.mock.calls.length).toBe(1);
       expect(stub.props.string).toBe('');
       store.dispatch({ type: 'APPEND', body: 'a' });
-      expect(spy.calls.length).toBe(2);
+      expect(spy.mock.calls.length).toBe(2);
       store.dispatch({ type: 'APPEND', body: 'b' });
-      expect(spy.calls.length).toBe(3);
+      expect(spy.mock.calls.length).toBe(3);
       store.dispatch({ type: 'APPEND', body: '' });
-      expect(spy.calls.length).toBe(3);
+      expect(spy.mock.calls.length).toBe(3);
     });
 
     it('should shallowly compare the merged state to prevent unnecessary updates', () => {
       const store = createStore(stringBuilder);
-      const spy = expect.createSpy(() => ({}));
+      const spy = jest.fn();
       function render({ string, pass }) {
         spy();
         return <Passthrough string={string} pass={pass} passVal={pass.val} />;
@@ -1172,7 +1168,7 @@ describe('React', () => {
 
       const tree = TestUtils.renderIntoDocument(<Root />);
       const stub = TestUtils.findRenderedComponentWithType(tree, Passthrough);
-      expect(spy.calls.length).toBe(1);
+      expect(spy.mock.calls.length).toBe(1);
       expect(stub.props.string).toBe('');
       expect(stub.props.pass).toBe('');
 
@@ -1240,7 +1236,7 @@ describe('React', () => {
 
       function AwesomeMap() {}
 
-      let spy = expect.spyOn(console, 'error');
+      let spy = jest.spyOn(console, 'error').mock;
       TestUtils.renderIntoDocument(
         <ProviderMock store={store}>
           {makeContainer(() => 1, () => ({}), () => ({}))}
@@ -1250,9 +1246,8 @@ describe('React', () => {
       expect(spy.calls[0].arguments[0]).toMatch(
         /mapStateToProps\(\) in Connect\(Container\) must return a plain object/
       );
-      spy.destroy();
 
-      spy = expect.spyOn(console, 'error');
+      spy = jest.spyOn(console, 'error').mock;
       TestUtils.renderIntoDocument(
         <ProviderMock store={store}>
           {makeContainer(() => 'hey', () => ({}), () => ({}))}
@@ -1262,9 +1257,8 @@ describe('React', () => {
       expect(spy.calls[0].arguments[0]).toMatch(
         /mapStateToProps\(\) in Connect\(Container\) must return a plain object/
       );
-      spy.destroy();
 
-      spy = expect.spyOn(console, 'error');
+      spy = jest.spyOn(console, 'error').mock;
       TestUtils.renderIntoDocument(
         <ProviderMock store={store}>
           {makeContainer(() => new AwesomeMap(), () => ({}), () => ({}))}
@@ -1274,9 +1268,8 @@ describe('React', () => {
       expect(spy.calls[0].arguments[0]).toMatch(
         /mapStateToProps\(\) in Connect\(Container\) must return a plain object/
       );
-      spy.destroy();
 
-      spy = expect.spyOn(console, 'error');
+      spy = jest.spyOn(console, 'error').mock;
       TestUtils.renderIntoDocument(
         <ProviderMock store={store}>
           {makeContainer(() => ({}), () => 1, () => ({}))}
@@ -1286,9 +1279,8 @@ describe('React', () => {
       expect(spy.calls[0].arguments[0]).toMatch(
         /mapDispatchToProps\(\) in Connect\(Container\) must return a plain object/
       );
-      spy.destroy();
 
-      spy = expect.spyOn(console, 'error');
+      spy = jest.spyOn(console, 'error').mock;
       TestUtils.renderIntoDocument(
         <ProviderMock store={store}>
           {makeContainer(() => ({}), () => 'hey', () => ({}))}
@@ -1298,9 +1290,8 @@ describe('React', () => {
       expect(spy.calls[0].arguments[0]).toMatch(
         /mapDispatchToProps\(\) in Connect\(Container\) must return a plain object/
       );
-      spy.destroy();
 
-      spy = expect.spyOn(console, 'error');
+      spy = jest.spyOn(console, 'error').mock;
       TestUtils.renderIntoDocument(
         <ProviderMock store={store}>
           {makeContainer(() => ({}), () => new AwesomeMap(), () => ({}))}
@@ -1310,9 +1301,8 @@ describe('React', () => {
       expect(spy.calls[0].arguments[0]).toMatch(
         /mapDispatchToProps\(\) in Connect\(Container\) must return a plain object/
       );
-      spy.destroy();
 
-      spy = expect.spyOn(console, 'error');
+      spy = jest.spyOn(console, 'error').mock;
       TestUtils.renderIntoDocument(
         <ProviderMock store={store}>
           {makeContainer(() => ({}), () => ({}), () => 1)}
@@ -1322,9 +1312,8 @@ describe('React', () => {
       expect(spy.calls[0].arguments[0]).toMatch(
         /mergeProps\(\) in Connect\(Container\) must return a plain object/
       );
-      spy.destroy();
 
-      spy = expect.spyOn(console, 'error');
+      spy = jest.spyOn(console, 'error').mock;
       TestUtils.renderIntoDocument(
         <ProviderMock store={store}>
           {makeContainer(() => ({}), () => ({}), () => 'hey')}
@@ -1334,9 +1323,8 @@ describe('React', () => {
       expect(spy.calls[0].arguments[0]).toMatch(
         /mergeProps\(\) in Connect\(Container\) must return a plain object/
       );
-      spy.destroy();
 
-      spy = expect.spyOn(console, 'error');
+      spy = jest.spyOn(console, 'error').mock;
       TestUtils.renderIntoDocument(
         <ProviderMock store={store}>
           {makeContainer(() => ({}), () => ({}), () => new AwesomeMap())}
@@ -1346,7 +1334,6 @@ describe('React', () => {
       expect(spy.calls[0].arguments[0]).toMatch(
         /mergeProps\(\) in Connect\(Container\) must return a plain object/
       );
-      spy.destroy();
     });
 
     it('should recalculate the state and rebind the actions on hot update', () => {
@@ -1682,8 +1669,8 @@ describe('React', () => {
         bar: 'bar'
       }));
 
-      const mapStateSpy = expect.createSpy();
-      const mapDispatchSpy = expect.createSpy().andReturn({});
+      const mapStateSpy = jest.fn();
+      const mapDispatchSpy = jest.fn().mockReturnValue({});
 
       class ImpureComponent extends Component {
         render() {
@@ -1726,8 +1713,8 @@ describe('React', () => {
         StatefulWrapper
       );
 
-      expect(mapStateSpy.calls.length).toBe(2);
-      expect(mapDispatchSpy.calls.length).toBe(2);
+      expect(mapStateSpy.mock.calls.length).toBe(2);
+      expect(mapDispatchSpy.mock.calls.length).toBe(2);
       expect(target.props.statefulValue).toEqual('foo');
 
       // Impure update
@@ -1735,8 +1722,8 @@ describe('React', () => {
       storeGetter.storeKey = 'bar';
       wrapper.setState({ storeGetter });
 
-      expect(mapStateSpy.calls.length).toBe(3);
-      expect(mapDispatchSpy.calls.length).toBe(3);
+      expect(mapStateSpy.mock.calls.length).toBe(3);
+      expect(mapDispatchSpy.mock.calls.length).toBe(3);
       expect(target.props.statefulValue).toEqual('bar');
     });
 
@@ -1879,8 +1866,6 @@ describe('React', () => {
       expect(mapStateCalls).toBe(4);
       expect(renderCalls).toBe(2);
       expect(spy.calls.length).toBe(1);
-
-      spy.destroy();
     });
 
     it('should not swallow errors when bailing out early', () => {
@@ -2274,9 +2259,9 @@ describe('React', () => {
         }
       }
 
-      const mapStateToProps = expect
-        .createSpy()
-        .andCall(state => ({ count: state }));
+      const mapStateToProps = jest
+        .fn(state => ({ count: state }));
+
       @connect(mapStateToProps)
       class Child extends Component {
         render() {
@@ -2293,9 +2278,9 @@ describe('React', () => {
         </ProviderMock>
       );
 
-      expect(mapStateToProps.calls.length).toBe(1);
+      expect(mapStateToProps.mock.calls.length).toBe(1);
       store.dispatch({ type: 'INC' });
-      expect(mapStateToProps.calls.length).toBe(2);
+      expect(mapStateToProps.mock.calls.length).toBe(2);
     });
 
     it('should subscribe properly when a middle connected component does not subscribe', () => {
@@ -2350,9 +2335,8 @@ describe('React', () => {
         }
       }
 
-      const mapStateToPropsB = expect
-        .createSpy()
-        .andCall(state => ({ count: state }));
+      const mapStateToPropsB = jest.fn(state => ({ count: state }));
+
       @connect(mapStateToPropsB)
       class B extends Component {
         render() {
@@ -2360,9 +2344,8 @@ describe('React', () => {
         }
       }
 
-      const mapStateToPropsC = expect
-        .createSpy()
-        .andCall(state => ({ count: state }));
+      const mapStateToPropsC = jest.fn(state => ({ count: state }));
+
       @connect(mapStateToPropsC)
       class C extends Component {
         render() {
@@ -2370,9 +2353,8 @@ describe('React', () => {
         }
       }
 
-      const mapStateToPropsD = expect
-        .createSpy()
-        .andCall(state => ({ count: state }));
+      const mapStateToPropsD = jest.fn(state => ({ count: state }));
+
       @connect(mapStateToPropsD)
       class D extends Component {
         render() {
@@ -2385,19 +2367,19 @@ describe('React', () => {
           <A />
         </ProviderMock>
       );
-      expect(mapStateToPropsB.calls.length).toBe(1);
-      expect(mapStateToPropsC.calls.length).toBe(1);
-      expect(mapStateToPropsD.calls.length).toBe(1);
+      expect(mapStateToPropsB.mock.calls.length).toBe(1);
+      expect(mapStateToPropsC.mock.calls.length).toBe(1);
+      expect(mapStateToPropsD.mock.calls.length).toBe(1);
 
       store1.dispatch({ type: 'INC' });
-      expect(mapStateToPropsB.calls.length).toBe(1);
-      expect(mapStateToPropsC.calls.length).toBe(1);
-      expect(mapStateToPropsD.calls.length).toBe(2);
+      expect(mapStateToPropsB.mock.calls.length).toBe(1);
+      expect(mapStateToPropsC.mock.calls.length).toBe(1);
+      expect(mapStateToPropsD.mock.calls.length).toBe(2);
 
       store2.dispatch({ type: 'INC' });
-      expect(mapStateToPropsB.calls.length).toBe(2);
-      expect(mapStateToPropsC.calls.length).toBe(2);
-      expect(mapStateToPropsD.calls.length).toBe(2);
+      expect(mapStateToPropsB.mock.calls.length).toBe(2);
+      expect(mapStateToPropsC.mock.calls.length).toBe(2);
+      expect(mapStateToPropsD.mock.calls.length).toBe(2);
     });
   });
 });

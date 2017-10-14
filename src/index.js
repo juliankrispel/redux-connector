@@ -1,12 +1,15 @@
 import React, { createElement, Component } from 'react';
 import shallowCompare from 'react-addons-shallow-compare';
-import invariant from 'invariant';
 import PropTypes from 'prop-types';
+import invariant from 'invariant';
 import mapDispatchToPropsFactories from './connect/mapDispatchToProps';
 import Subscription from './utils/Subscription';
 import selectorFactory from './connect/selectorFactory';
 import mapStateToPropsFactories from './connect/mapStateToProps';
 import mergePropsFactories from './connect/mergeProps';
+import shallowEqual from './utils/shallowEqual';
+
+const strictEqual = (a, b) => a === b;
 
 export const subscriptionShape = PropTypes.shape({
   trySubscribe: PropTypes.func.isRequired,
@@ -48,7 +51,6 @@ function makeSelectorStateful(sourceSelector, store) {
     run: function runComponentSelector(props) {
       try {
         const nextProps = sourceSelector(store.getState(), props);
-        console.log('yo', store.getState(), nextProps);
         if (nextProps !== selector.props || selector.error) {
           selector.shouldComponentUpdate = true;
           selector.props = nextProps;
@@ -107,12 +109,12 @@ class Connect extends Component {
     // dispatching an action in its componentWillMount, we have to re-run the select and maybe
     // re-render.
     this.subscription.trySubscribe();
-    this.selector.run(this.props);
+    this.selector.run(this.getRestProps());
     if (this.selector.shouldComponentUpdate) this.forceUpdate();
   }
 
   componentWillReceiveProps(nextProps) {
-    this.selector.run(nextProps);
+    this.selector.run(this.getRestProps(nextProps));
   }
 
   shouldComponentUpdate() {
@@ -169,6 +171,10 @@ class Connect extends Component {
       initMapDispatchToProps,
       initMergeProps,
       ...(options || {}),
+      areStatesEqual: strictEqual,
+      areOwnPropsEqual: shallowEqual,
+      areStatePropsEqual: shallowEqual,
+      areMergedPropsEqual: shallowEqual,
       methodName,
       shouldHandleStateChanges: this.shouldHandleStateChanges(),
       storeKey,
@@ -181,11 +187,21 @@ class Connect extends Component {
       selectorFactoryOptions
     );
     this.selector = makeSelectorStateful(sourceSelector, this.store);
-    this.selector.run(otherProps);
+    this.selector.run(this.getRestProps());
   }
 
-  getOtherProps = () => {
-  }
+  getRestProps = (props = this.props) => {
+    const {
+      mapStateToProps,
+      mapDispatchToProps,
+      mergeProps,
+      options,
+      children,
+      ...otherProps
+    } = props;
+
+    return otherProps;
+  };
 
   initSubscription() {
     if (!this.shouldHandleStateChanges()) return;
@@ -213,7 +229,7 @@ class Connect extends Component {
   }
 
   onStateChange() {
-    this.selector.run(this.props);
+    this.selector.run(this.getRestProps());
 
     if (!this.selector.shouldComponentUpdate) {
       this.notifyNestedSubs();
@@ -254,8 +270,6 @@ class Connect extends Component {
     const selector = this.selector;
     selector.shouldComponentUpdate = false;
 
-    console.log('yo', this.addExtraProps(selector.props));
-
     if (selector.error) {
       throw selector.error;
     } else {
@@ -283,10 +297,24 @@ Connect.defaultProps = {
   }
 };
 
-export const connect = options => Comp => props => (
-  <Connect {...options}>
-    {newProps => <Comp {...props} {...newProps} />}
-  </Connect>
-);
+export const connect = (
+  mapStateToProps,
+  mapDispatchToProps,
+  mergeProps,
+  options
+) => Comp => props => {
+  const options = {
+    mapStateToProps,
+    mapDispatchToProps,
+    mergeProps,
+    options
+  };
+
+  return (
+    <Connect {...props} {...options}>
+      {newProps => <Comp {...newProps} />}
+    </Connect>
+  );
+};
 
 export default Connect;
