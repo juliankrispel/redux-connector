@@ -1,6 +1,7 @@
 /*eslint-disable react/prop-types*/
 
 import expect from 'expect';
+
 import React, { Children, Component } from 'react';
 import createClass from 'create-react-class';
 import PropTypes from 'prop-types';
@@ -88,7 +89,7 @@ describe('React', () => {
         </ProviderMock>
       );
 
-      const container = TestUtils.findRenderedComponentWithType(tree, Connect);
+      const container = TestUtils.findRenderedComponentWithType(tree, Enhanced);
 
       expect(container.context.store).toBe(store);
     });
@@ -100,17 +101,16 @@ describe('React', () => {
         hello: 'world'
       }));
 
+      @connect(({ foo, baz }) => ({ foo, baz }))
       class Container extends Component {
         render() {
           return <Passthrough {...this.props} />;
         }
       }
 
-      const Enhanced = connect(({ foo, baz }) => ({ foo, baz }))(Container);
-
       const container = TestUtils.renderIntoDocument(
         <ProviderMock store={store}>
-          <Enhanced pass="through" baz={49} />
+          <Container pass="through" baz={50} />
         </ProviderMock>
       );
       const stub = TestUtils.findRenderedComponentWithType(
@@ -887,7 +887,7 @@ describe('React', () => {
         div
       );
 
-			expect(spy.mock.calls.length).toBe(0);
+      expect(spy.mock.calls.length).toBe(0);
       ReactDOM.unmountComponentAtNode(div);
       expect(spy.mock.calls.length).toBe(1);
     });
@@ -2198,6 +2198,7 @@ describe('React', () => {
         return error.message;
       }
     }
+
     it('should throw a helpful error for invalid mapStateToProps arguments', () => {
       @connect('invalid')
       class InvalidMapState extends React.Component {
@@ -2207,10 +2208,12 @@ describe('React', () => {
       }
 
       const error = renderWithBadConnect(InvalidMapState);
-      expect(error).toInclude('string');
-      expect(error).toInclude('mapStateToProps');
-      expect(error).toInclude('InvalidMapState');
+      console.log('yo', error);
+      expect(error).toContain('string');
+      expect(error).toContain('mapStateToProps');
+      expect(error).toContain('InvalidMapState');
     });
+
     it('should throw a helpful error for invalid mapDispatchToProps arguments', () => {
       @connect(null, 'invalid')
       class InvalidMapDispatch extends React.Component {
@@ -2259,8 +2262,7 @@ describe('React', () => {
         }
       }
 
-      const mapStateToProps = jest
-        .fn(state => ({ count: state }));
+      const mapStateToProps = jest.fn(state => ({ count: state }));
 
       @connect(mapStateToProps)
       class Child extends Component {

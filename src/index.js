@@ -75,6 +75,8 @@ class Connect extends Component {
     this.propsMode = Boolean(props[storeKey]);
     this.setWrappedInstance = this.setWrappedInstance.bind(this);
 
+    this.initialize();
+
     invariant(
       this.store,
       `Could not find "${storeKey}" in either the context or props of ` +
@@ -86,9 +88,11 @@ class Connect extends Component {
     this.initSubscription();
   }
 
-  displayName = displayName;
+  initialize() {
+    this.displayName = displayName;
+  }
 
-  shouldHandleStateChanges = () => Boolean(this.props.mapStateToProps);
+  shouldHandleStateChanges = () => Boolean(this.getOptions().mapStateToProps);
 
   getChildContext() {
     // If this component received store from props, its subscription should be transparent
@@ -143,15 +147,15 @@ class Connect extends Component {
     this.wrappedInstance = ref;
   }
 
+  getOptions = () => this.staticOpts || this.props;
+
   initSelector() {
     const {
       mapStateToProps,
       mapDispatchToProps,
       mergeProps,
-      options,
-      children,
-      ...otherProps
-    } = this.props;
+      options
+    } = this.getOptions();
 
     const initMapStateToProps = match(
       mapStateToProps,
@@ -190,20 +194,18 @@ class Connect extends Component {
     this.selector.run(this.getRestProps());
   }
 
-  getRestProps = (props = this.props) => {
-    const {
+  getRestProps = (
+    {
       mapStateToProps,
       mapDispatchToProps,
       mergeProps,
       options,
       children,
       ...otherProps
-    } = props;
+    } = this.props
+  ) => otherProps;
 
-    return otherProps;
-  };
-
-  initSubscription() {
+  initSubscription = () => {
     if (!this.shouldHandleStateChanges()) return;
 
     // parentSub's source should match where store came from: props vs. context. A component
@@ -211,6 +213,7 @@ class Connect extends Component {
     const parentSub = (this.propsMode ? this.props : this.context)[
       subscriptionKey
     ];
+
     this.subscription = new Subscription(
       this.store,
       parentSub,
@@ -226,7 +229,7 @@ class Connect extends Component {
     this.notifyNestedSubs = this.subscription.notifyNestedSubs.bind(
       this.subscription
     );
-  }
+  };
 
   onStateChange() {
     this.selector.run(this.getRestProps());
@@ -266,6 +269,10 @@ class Connect extends Component {
     return withExtras;
   }
 
+  renderChild() {
+    return this.props.children(this.addExtraProps(this.selector.props));
+  }
+
   render() {
     const selector = this.selector;
     selector.shouldComponentUpdate = false;
@@ -273,7 +280,7 @@ class Connect extends Component {
     if (selector.error) {
       throw selector.error;
     } else {
-      return this.props.children(this.addExtraProps(selector.props));
+      return this.renderChild();
     }
   }
 }
@@ -302,19 +309,29 @@ export const connect = (
   mapDispatchToProps,
   mergeProps,
   options
-) => Comp => props => {
-  const options = {
+) => Comp => {
+  const opts = {
     mapStateToProps,
     mapDispatchToProps,
     mergeProps,
     options
   };
 
-  return (
-    <Connect {...props} {...options}>
-      {newProps => <Comp {...newProps} />}
-    </Connect>
-  );
+  class ConnectWrap extends Connect {
+    initialize() {
+      this.displayName = `Connect(${Comp.displayName})`;
+      this.staticOpts = opts;
+    }
+
+    renderChild() {
+      const props = this.addExtraProps(this.selector.props);
+      const children = this.props.children;
+
+      return <Comp {...props} {...children} />;
+    }
+  }
+
+  return ConnectWrap;
 };
 
 export default Connect;
