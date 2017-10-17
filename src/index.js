@@ -9,7 +9,17 @@ import mapStateToPropsFactories from './connect/mapStateToProps';
 import mergePropsFactories from './connect/mergeProps';
 import shallowEqual from './utils/shallowEqual';
 
+const defaultOpts = {
+  getDisplayName: name => `ConnectAdvanced(${name})`,
+  pure: true,
+  areStatesEqual: strictEqual,
+  areOwnPropsEqual: shallowEqual,
+  areStatePropsEqual: shallowEqual,
+  areMergedPropsEqual: shallowEqual
+};
+
 const strictEqual = (a, b) => a === b;
+let hotReloadingVersion = 0;
 
 export const subscriptionShape = PropTypes.shape({
   trySubscribe: PropTypes.func.isRequired,
@@ -89,7 +99,7 @@ class Connect extends Component {
   }
 
   initialize() {
-    this.displayName = displayName;
+    this.displayName = `Connect`;
   }
 
   shouldHandleStateChanges = () => Boolean(this.getOptions().mapStateToProps);
@@ -298,28 +308,36 @@ Connect.childContextTypes = childContextTypes;
 Connect.contextTypes = contextTypes;
 Connect.propTypes = contextTypes;
 
-Connect.defaultProps = {
-  options: {
-    pure: true
-  }
-};
+Connect.defaultProps = defaultOpts;
 
 export const connect = (
   mapStateToProps,
   mapDispatchToProps,
   mergeProps,
   options
-) => Comp => {
+) => WrappedComponent => {
+  invariant(
+    typeof WrappedComponent == 'function',
+    `You must pass a component to the function returned by ` +
+      `connect. Instead received ${JSON.stringify(WrappedComponent)}`
+  );
+
+  const wrappedComponentName =
+    WrappedComponent.displayName || WrappedComponent.name || 'Component';
+
   const opts = {
     mapStateToProps,
     mapDispatchToProps,
     mergeProps,
-    options
+    options: {
+      wrappedComponentName,
+      ...defaultOpts,
+      ...options
+    }
   };
 
   class ConnectWrap extends Connect {
     initialize() {
-      this.displayName = `Connect(${Comp.displayName})`;
       this.staticOpts = opts;
     }
 
@@ -327,9 +345,11 @@ export const connect = (
       const props = this.addExtraProps(this.selector.props);
       const children = this.props.children;
 
-      return <Comp {...props} {...children} />;
+      return <WrappedComponent {...props} children={children} />;
     }
   }
+
+  ConnectWrap.displayName = opts.options.getDisplayName(wrappedComponentName);
 
   return ConnectWrap;
 };

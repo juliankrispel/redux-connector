@@ -516,7 +516,7 @@ describe('React', () => {
       expect(stub.props.foo).toEqual('bar');
       expect(() =>
         TestUtils.findRenderedComponentWithType(container, Container)
-      ).toNotThrow();
+      ).not.toThrow();
       const decorated = TestUtils.findRenderedComponentWithType(
         container,
         Container
@@ -845,7 +845,7 @@ describe('React', () => {
         expect(stub.props.pass).toEqual('through');
         expect(() =>
           TestUtils.findRenderedComponentWithType(container, Container)
-        ).toNotThrow();
+        ).not.toThrow();
         const decorated = TestUtils.findRenderedComponentWithType(
           container,
           Container
@@ -1977,8 +1977,8 @@ describe('React', () => {
 
       store.dispatch({ type: 'test' });
       expect(initialOwnProps).toBe(undefined);
-      expect(initialState).toNotBe(undefined);
-      expect(secondaryOwnProps).toNotBe(undefined);
+      expect(initialState).not.toBe(undefined);
+      expect(secondaryOwnProps).not.toBe(undefined);
       expect(secondaryOwnProps.name).toBe('a');
     });
 
@@ -2223,10 +2223,11 @@ describe('React', () => {
       }
 
       const error = renderWithBadConnect(InvalidMapDispatch);
-      expect(error).toInclude('string');
-      expect(error).toInclude('mapDispatchToProps');
-      expect(error).toInclude('InvalidMapDispatch');
+      expect(error).toContain('string');
+      expect(error).toContain('mapDispatchToProps');
+      expect(error).toContain('InvalidMapDispatch');
     });
+
     it('should throw a helpful error for invalid mergeProps arguments', () => {
       @connect(null, null, 'invalid')
       class InvalidMerge extends React.Component {
@@ -2236,9 +2237,9 @@ describe('React', () => {
       }
 
       const error = renderWithBadConnect(InvalidMerge);
-      expect(error).toInclude('string');
-      expect(error).toInclude('mergeProps');
-      expect(error).toInclude('InvalidMerge');
+      expect(error).toContain('string');
+      expect(error).toContain('mergeProps');
+      expect(error).toContain('InvalidMerge');
     });
 
     it('should notify nested components through a blocking component', () => {
