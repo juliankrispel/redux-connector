@@ -1236,102 +1236,103 @@ describe('React', () => {
 
       function AwesomeMap() {}
 
-      let spy = jest.spyOn(console, 'error').mock;
+      const spy = jest.spyOn(console, 'error');
+      const mock = spy.mock;
       TestUtils.renderIntoDocument(
         <ProviderMock store={store}>
           {makeContainer(() => 1, () => ({}), () => ({}))}
         </ProviderMock>
       );
-      expect(spy.calls.length).toBe(1);
-      expect(spy.calls[0].arguments[0]).toMatch(
-        /mapStateToProps\(\) in Connect\(Container\) must return a plain object/
+      expect(mock.calls.length).toBe(1);
+      expect(mock.calls[0][0]).toContain(
+        'mapStateToProps() in Connect(Container) must return a plain object'
       );
 
-      spy = jest.spyOn(console, 'error').mock;
+      spy.mockReset();
       TestUtils.renderIntoDocument(
         <ProviderMock store={store}>
           {makeContainer(() => 'hey', () => ({}), () => ({}))}
         </ProviderMock>
       );
-      expect(spy.calls.length).toBe(1);
-      expect(spy.calls[0].arguments[0]).toMatch(
+      expect(mock.calls.length).toBe(1);
+      expect(mock.calls[0][0]).toMatch(
         /mapStateToProps\(\) in Connect\(Container\) must return a plain object/
       );
 
-      spy = jest.spyOn(console, 'error').mock;
+      spy.mockReset();
       TestUtils.renderIntoDocument(
         <ProviderMock store={store}>
           {makeContainer(() => new AwesomeMap(), () => ({}), () => ({}))}
         </ProviderMock>
       );
-      expect(spy.calls.length).toBe(1);
-      expect(spy.calls[0].arguments[0]).toMatch(
+      expect(mock.calls.length).toBe(1);
+      expect(mock.calls[0][0]).toMatch(
         /mapStateToProps\(\) in Connect\(Container\) must return a plain object/
       );
 
-      spy = jest.spyOn(console, 'error').mock;
+      spy.mockReset();
       TestUtils.renderIntoDocument(
         <ProviderMock store={store}>
           {makeContainer(() => ({}), () => 1, () => ({}))}
         </ProviderMock>
       );
-      expect(spy.calls.length).toBe(1);
-      expect(spy.calls[0].arguments[0]).toMatch(
+      expect(mock.calls.length).toBe(1);
+      expect(mock.calls[0][0]).toMatch(
         /mapDispatchToProps\(\) in Connect\(Container\) must return a plain object/
       );
 
-      spy = jest.spyOn(console, 'error').mock;
+      spy.mockReset();
       TestUtils.renderIntoDocument(
         <ProviderMock store={store}>
           {makeContainer(() => ({}), () => 'hey', () => ({}))}
         </ProviderMock>
       );
-      expect(spy.calls.length).toBe(1);
-      expect(spy.calls[0].arguments[0]).toMatch(
+      expect(mock.calls.length).toBe(1);
+      expect(mock.calls[0][0]).toMatch(
         /mapDispatchToProps\(\) in Connect\(Container\) must return a plain object/
       );
 
-      spy = jest.spyOn(console, 'error').mock;
+      spy.mockReset();
       TestUtils.renderIntoDocument(
         <ProviderMock store={store}>
           {makeContainer(() => ({}), () => new AwesomeMap(), () => ({}))}
         </ProviderMock>
       );
-      expect(spy.calls.length).toBe(1);
-      expect(spy.calls[0].arguments[0]).toMatch(
+      expect(mock.calls.length).toBe(1);
+      expect(mock.calls[0][0]).toMatch(
         /mapDispatchToProps\(\) in Connect\(Container\) must return a plain object/
       );
 
-      spy = jest.spyOn(console, 'error').mock;
+      spy.mockReset();
       TestUtils.renderIntoDocument(
         <ProviderMock store={store}>
           {makeContainer(() => ({}), () => ({}), () => 1)}
         </ProviderMock>
       );
-      expect(spy.calls.length).toBe(1);
-      expect(spy.calls[0].arguments[0]).toMatch(
+      expect(mock.calls.length).toBe(1);
+      expect(mock.calls[0][0]).toMatch(
         /mergeProps\(\) in Connect\(Container\) must return a plain object/
       );
 
-      spy = jest.spyOn(console, 'error').mock;
+      spy.mockReset();
       TestUtils.renderIntoDocument(
         <ProviderMock store={store}>
           {makeContainer(() => ({}), () => ({}), () => 'hey')}
         </ProviderMock>
       );
-      expect(spy.calls.length).toBe(1);
-      expect(spy.calls[0].arguments[0]).toMatch(
+      expect(mock.calls.length).toBe(1);
+      expect(mock.calls[0][0]).toMatch(
         /mergeProps\(\) in Connect\(Container\) must return a plain object/
       );
 
-      spy = jest.spyOn(console, 'error').mock;
+      spy.mockReset();
       TestUtils.renderIntoDocument(
         <ProviderMock store={store}>
           {makeContainer(() => ({}), () => ({}), () => new AwesomeMap())}
         </ProviderMock>
       );
-      expect(spy.calls.length).toBe(1);
-      expect(spy.calls[0].arguments[0]).toMatch(
+      expect(mock.calls.length).toBe(1);
+      expect(mock.calls[0][0]).toMatch(
         /mergeProps\(\) in Connect\(Container\) must return a plain object/
       );
     });
@@ -1848,24 +1849,22 @@ describe('React', () => {
       expect(renderCalls).toBe(1);
       expect(mapStateCalls).toBe(1);
 
-      const spy = expect
-        .spyOn(Container.prototype, 'setState')
-        .andCallThrough();
+      const spy = jest.spyOn(Container.prototype, 'setState');
 
       store.dispatch({ type: 'APPEND', body: 'a' });
       expect(mapStateCalls).toBe(2);
       expect(renderCalls).toBe(1);
-      expect(spy.calls.length).toBe(0);
+      expect(spy.mock.calls.length).toBe(0);
 
       store.dispatch({ type: 'APPEND', body: 'a' });
       expect(mapStateCalls).toBe(3);
       expect(renderCalls).toBe(1);
-      expect(spy.calls.length).toBe(0);
+      expect(spy.mock.calls.length).toBe(0);
 
       store.dispatch({ type: 'APPEND', body: 'a' });
       expect(mapStateCalls).toBe(4);
       expect(renderCalls).toBe(2);
-      expect(spy.calls.length).toBe(1);
+      expect(spy.mock.calls.length).toBe(1);
     });
 
     it('should not swallow errors when bailing out early', () => {

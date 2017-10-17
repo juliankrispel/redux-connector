@@ -9,16 +9,18 @@ import mapStateToPropsFactories from './connect/mapStateToProps';
 import mergePropsFactories from './connect/mergeProps';
 import shallowEqual from './utils/shallowEqual';
 
+const strictEqual = (a, b) => a === b;
+
 const defaultOpts = {
-  getDisplayName: name => `ConnectAdvanced(${name})`,
+  getDisplayName: name => `Connect(${name})`,
   pure: true,
+  withRef: false,
   areStatesEqual: strictEqual,
   areOwnPropsEqual: shallowEqual,
   areStatePropsEqual: shallowEqual,
   areMergedPropsEqual: shallowEqual
 };
 
-const strictEqual = (a, b) => a === b;
 let hotReloadingVersion = 0;
 
 export const subscriptionShape = PropTypes.shape({
@@ -49,7 +51,6 @@ function match(arg, factories, name) {
 
 const withRef = false;
 const methodName = 'connect';
-const displayName = 'Connect';
 const storeKey = 'store';
 const subscriptionKey = storeKey + 'Subscription';
 
@@ -90,16 +91,14 @@ class Connect extends Component {
     invariant(
       this.store,
       `Could not find "${storeKey}" in either the context or props of ` +
-        `"${displayName}". Either wrap the root component in a <Provider>, ` +
-        `or explicitly pass "${storeKey}" as a prop to "${displayName}".`
+        `"${this.constructor
+          .displayName}". Either wrap the root component in a <Provider>, ` +
+        `or explicitly pass "${storeKey}" as a prop to "${this.constructor
+          .displayName}".`
     );
 
     this.initSelector();
     this.initSubscription();
-  }
-
-  initialize() {
-    this.displayName = `Connect`;
   }
 
   shouldHandleStateChanges = () => Boolean(this.getOptions().mapStateToProps);
@@ -145,6 +144,8 @@ class Connect extends Component {
   }
 
   getWrappedInstance() {
+    const { options: { withRef } } = this.getOptions();
+
     invariant(
       withRef,
       `To access the wrapped instance, you need to specify ` +
@@ -185,15 +186,10 @@ class Connect extends Component {
       initMapDispatchToProps,
       initMergeProps,
       ...(options || {}),
-      areStatesEqual: strictEqual,
-      areOwnPropsEqual: shallowEqual,
-      areStatePropsEqual: shallowEqual,
-      areMergedPropsEqual: shallowEqual,
       methodName,
       shouldHandleStateChanges: this.shouldHandleStateChanges(),
       storeKey,
-      withRef,
-      displayName
+      displayName: this.constructor.displayName
     };
 
     const sourceSelector = selectorFactory(
@@ -267,6 +263,7 @@ class Connect extends Component {
   }
 
   addExtraProps(props) {
+    const { options: { withRef } } = this.getOptions();
     if (!withRef && !(this.propsMode && this.subscription)) return props;
     // make a shallow copy so that fields added don't leak to the original selector.
     // this is especially important for 'ref' since that's a reference back to the component
@@ -308,7 +305,7 @@ Connect.childContextTypes = childContextTypes;
 Connect.contextTypes = contextTypes;
 Connect.propTypes = contextTypes;
 
-Connect.defaultProps = defaultOpts;
+Connect.defaultProps = { options: defaultOpts };
 
 export const connect = (
   mapStateToProps,
