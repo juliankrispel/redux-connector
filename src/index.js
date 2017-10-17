@@ -1,5 +1,6 @@
 import React, { createElement, Component } from 'react';
 import shallowCompare from 'react-addons-shallow-compare';
+import hoistStatics from 'hoist-non-react-statics';
 import PropTypes from 'prop-types';
 import invariant from 'invariant';
 import mapDispatchToPropsFactories from './connect/mapDispatchToProps';
@@ -346,9 +347,10 @@ export const connect = (
     }
   }
 
+  ConnectWrap.WrappedComponent = WrappedComponent;
   ConnectWrap.displayName = opts.options.getDisplayName(wrappedComponentName);
 
-  return ConnectWrap;
+  return hoistStatics(ConnectWrap, WrappedComponent);
 };
 
 export default Connect;

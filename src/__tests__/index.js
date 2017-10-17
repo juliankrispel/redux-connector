@@ -1173,45 +1173,45 @@ describe('React', () => {
       expect(stub.props.pass).toBe('');
 
       store.dispatch({ type: 'APPEND', body: 'a' });
-      expect(spy.calls.length).toBe(2);
+      expect(spy.mock.calls.length).toBe(2);
       expect(stub.props.string).toBe('a');
       expect(stub.props.pass).toBe('');
 
       tree.setState({ pass: '' });
-      expect(spy.calls.length).toBe(2);
+      expect(spy.mock.calls.length).toBe(2);
       expect(stub.props.string).toBe('a');
       expect(stub.props.pass).toBe('');
 
       tree.setState({ pass: 'through' });
-      expect(spy.calls.length).toBe(3);
+      expect(spy.mock.calls.length).toBe(3);
       expect(stub.props.string).toBe('a');
       expect(stub.props.pass).toBe('through');
 
       tree.setState({ pass: 'through' });
-      expect(spy.calls.length).toBe(3);
+      expect(spy.mock.calls.length).toBe(3);
       expect(stub.props.string).toBe('a');
       expect(stub.props.pass).toBe('through');
 
       const obj = { prop: 'val' };
       tree.setState({ pass: obj });
-      expect(spy.calls.length).toBe(4);
+      expect(spy.mock.calls.length).toBe(4);
       expect(stub.props.string).toBe('a');
       expect(stub.props.pass).toBe(obj);
 
       tree.setState({ pass: obj });
-      expect(spy.calls.length).toBe(4);
+      expect(spy.mock.calls.length).toBe(4);
       expect(stub.props.string).toBe('a');
       expect(stub.props.pass).toBe(obj);
 
       const obj2 = Object.assign({}, obj, { val: 'otherval' });
       tree.setState({ pass: obj2 });
-      expect(spy.calls.length).toBe(5);
+      expect(spy.mock.calls.length).toBe(5);
       expect(stub.props.string).toBe('a');
       expect(stub.props.pass).toBe(obj2);
 
       obj2.val = 'mutation';
       tree.setState({ pass: obj2 });
-      expect(spy.calls.length).toBe(5);
+      expect(spy.mock.calls.length).toBe(5);
       expect(stub.props.string).toBe('a');
       expect(stub.props.passVal).toBe('otherval');
     });
@@ -1500,7 +1500,8 @@ describe('React', () => {
       const decorator = connect(state => state);
       const decorated = decorator(Container);
 
-      expect(decorated.howIsRedux).toBeA('function');
+      console.log(decorated.howIsRedux);
+      expect(typeof decorated.howIsRedux).toBe('function');
       expect(decorated.howIsRedux()).toBe('Awesome!');
       expect(decorated.foo).toBe('bar');
     });
